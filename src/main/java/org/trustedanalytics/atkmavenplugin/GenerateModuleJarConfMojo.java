@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Generate atk-module-jar.conf
+ * Generate atk-module-generated.conf
  *
  * @goal generate-conf
  * @phase process-sources
@@ -49,7 +49,7 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
     /**
      * output filename
      */
-    private static final String OUTPUT_FILENAME = "atk-module-jar.conf";
+    private static final String OUTPUT_FILENAME = "atk-module-generated.conf";
 
     /**
      * The 'runtime' maven scope
@@ -70,7 +70,7 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
      * keys used in generated conf
      */
     private static final String JAR_NAMES_KEY = "atk.module.jar-names";
-    private static final String DEV_CLASSPATH_KEY = "atk.module.dev-class-path";
+    private static final String BUILD_CLASSPATH_KEY = "atk.module.build-classpath";
 
     /**
      * The Maven Project
@@ -114,7 +114,7 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
     private List<RemoteRepository> projectRepos;
 
     /**
-     * Generate atk-module-jar.conf
+     * Generate atk-module-generated.conf
      */
     public void execute() throws MojoExecutionException {
 
@@ -152,7 +152,7 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
 
             Config config = ConfigFactory.empty()
                     .withValue(JAR_NAMES_KEY, ConfigValueFactory.fromIterable(values, ORIGIN_DESCRIPTION))
-                    .withValue(DEV_CLASSPATH_KEY, ConfigValueFactory.fromAnyRef(nlg.getClassPath(), ORIGIN_DESCRIPTION));
+                    .withValue(BUILD_CLASSPATH_KEY, ConfigValueFactory.fromAnyRef(nlg.getClassPath(), ORIGIN_DESCRIPTION));
 
             File configFile = new File(classesDir, OUTPUT_FILENAME);
             String contents = config.root().render();
