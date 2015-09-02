@@ -106,14 +106,6 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
     private RepositorySystemSession repoSession;
 
     /**
-     * The project's remote repositories to use for the resolution of project dependencies.
-     *
-     * @parameter default-value="${project.remoteProjectRepositories}"
-     * @readonly
-     */
-    private List<RemoteRepository> projectRepos;
-
-    /**
      * Generate atk-module-generated.conf
      */
     public void execute() throws MojoExecutionException {
@@ -131,9 +123,6 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
 
             CollectRequest collectRequest = new CollectRequest();
             collectRequest.setRoot(dependency);
-            for (RemoteRepository repo : projectRepos) {
-                collectRequest.addRepository(repo);
-            }
 
             DependencyNode node = repoSystem.collectDependencies(repoSession, collectRequest).getRoot();
 
