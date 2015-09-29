@@ -78,9 +78,9 @@
                     </execution>
                 </executions>
                 <configuration>
-		    <skipLocalStaging>true</skipLocalStaging>
+		                <skipLocalStaging>true</skipLocalStaging>
                     <serverId>atk</serverId>
-                    <nexusUrl>http://ec2-52-88-56-123.us-west-2.compute.amazonaws.com</nexusUrl>
+                    <nexusUrl>maven.trustedanalytics.org</nexusUrl>
                 </configuration>
             </plugin>
         </plugins>
@@ -90,11 +90,11 @@
     <distributionManagement>
         <repository>
             <id>atk</id>
-            <url>http://ec2-52-88-56-123.us-west-2.compute.amazonaws.com/content/repositories/releases/</url>
+            <url>http://maven.trustedanalytics.org/content/repositories/releases/</url>
         </repository>
         <snapshotRepository>
             <id>atk-snapshots</id>
-            <url>http://ec2-52-88-56-123.us-west-2.compute.amazonaws.com/content/repositories/snapshots/</url>
+            <url>http://maven.trustedanalytics.org/content/repositories/snapshots/</url>
         </snapshotRepository>
 
     </distributionManagement>
