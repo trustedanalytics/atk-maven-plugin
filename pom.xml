@@ -91,11 +91,11 @@
     <distributionManagement>
         <repository>
             <id>atk</id>
-            <url>http://maven.trustedanalytics.org/content/repositories/releases/</url>
+            <url>http://ec2-54-69-244-31.us-west-2.compute.amazonaws.com/content/repositories/releases/</url>
         </repository>
         <snapshotRepository>
             <id>atk-snapshots</id>
-            <url>http://maven.trustedanalytics.org/content/repositories/snapshots/</url>
+            <url>http://ec2-54-69-244-31.us-west-2.compute.amazonaws.com/content/repositories/snapshots/</url>
         </snapshotRepository>
 
     </distributionManagement>
