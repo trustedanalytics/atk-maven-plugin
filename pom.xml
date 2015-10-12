@@ -91,11 +91,11 @@
     <distributionManagement>
         <repository>
             <id>atk</id>
-            <url>https://maven.trustedanalytics.org/content/repositories/releases</url>
+            <url>http://maven.trustedanalytics.org/content/repositories/releases</url>
         </repository>
         <snapshotRepository>
             <id>atk-snapshots</id>
-            <url>https://maven.trustedanalytics.org/content/repositories/snapshots</url>
+            <url>http://maven.trustedanalytics.org/content/repositories/snapshots</url>
         </snapshotRepository>
 
     </distributionManagement>
