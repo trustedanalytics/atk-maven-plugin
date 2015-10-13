@@ -9,7 +9,7 @@
   <packaging>maven-plugin</packaging>
 
   <properties>
-    <mavenVersion>3.0</mavenVersion>
+    <mavenVersion>3.3.3</mavenVersion>
   </properties>
 
   <prerequisites>
@@ -81,7 +81,7 @@
                 <configuration>
 		                <skipLocalStaging>true</skipLocalStaging>
                     <serverId>atk</serverId>
-                    <nexusUrl>maven.trustedanalytics.org</nexusUrl>
+                    <nexusUrl>https://maven.trustedanalytics.org</nexusUrl>
                 </configuration>
             </plugin>
         </plugins>
@@ -91,11 +91,11 @@
     <distributionManagement>
         <repository>
             <id>atk</id>
-            <url>http://maven.trustedanalytics.org/content/repositories/releases/</url>
+            <url>https://maven.trustedanalytics.org/content/repositories/releases/</url>
         </repository>
         <snapshotRepository>
             <id>atk-snapshots</id>
-            <url>http://maven.trustedanalytics.org/content/repositories/snapshots/</url>
+            <url>https://maven.trustedanalytics.org/content/repositories/snapshots/</url>
         </snapshotRepository>
 
     </distributionManagement>
