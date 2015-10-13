@@ -26,10 +26,15 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
+import org.eclipse.aether.collection.CollectResult;
+import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
-import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.util.filter.AndDependencyFilter;
+import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 
 import java.io.File;
@@ -72,6 +77,8 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
     private static final String JAR_NAMES_KEY = "atk.module.jar-names";
     private static final String BUILD_CLASSPATH_KEY = "atk.module.build-classpath";
 
+    private static final String DOT = ".";
+
     /**
      * The Maven Project
      *
@@ -109,47 +116,101 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
      * Generate atk-module-generated.conf
      */
     public void execute() throws MojoExecutionException {
-
         try {
-            File classesDir = new File(outputDirectory, CLASSES_DIR_NAME);
-            if (!classesDir.exists()) {
-                if (!classesDir.mkdirs()) {
-                    throw new IOException("failed to create directory " + classesDir.getAbsolutePath());
-                }
-            }
+            ensureClassesDirExists();
 
-            String coords = project.getGroupId() + ":" + project.getArtifactId() + ":" + project.getVersion();
-            Dependency dependency = new Dependency(new DefaultArtifact(coords), RUNTIME_SCOPE);
+            DependencyNode rootNode = requestRootDependencyNode();
+            resolveDependencies(rootNode);
 
-            CollectRequest collectRequest = new CollectRequest();
-            collectRequest.setRoot(dependency);
+            PreorderNodeListGenerator nodeVisitor = new PreorderNodeListGenerator();
+            rootNode.accept(nodeVisitor);
+            List<String> jarNames = getJarNames(nodeVisitor);
+            String classpath = projectArtifactTarget() + File.pathSeparator + nodeVisitor.getClassPath();
 
-            DependencyNode node = repoSystem.collectDependencies(repoSession, collectRequest).getRoot();
-
-            DependencyRequest dependencyRequest = new DependencyRequest();
-            dependencyRequest.setRoot(node);
-
-            repoSystem.resolveDependencies(repoSession, dependencyRequest);
-
-            PreorderNodeListGenerator nlg = new PreorderNodeListGenerator();
-            node.accept(nlg);
-
-            List<String> values = new ArrayList<String>();
-            for (org.eclipse.aether.artifact.Artifact a : nlg.getArtifacts(false)) {
-                values.add(a.getFile().getName());
-            }
-
-            Config config = ConfigFactory.empty()
-                    .withValue(JAR_NAMES_KEY, ConfigValueFactory.fromIterable(values, ORIGIN_DESCRIPTION))
-                    .withValue(BUILD_CLASSPATH_KEY, ConfigValueFactory.fromAnyRef(nlg.getClassPath(), ORIGIN_DESCRIPTION));
-
-            File configFile = new File(classesDir, OUTPUT_FILENAME);
-            String contents = config.root().render();
-            writeFile(configFile, contents);
+            writeAtkModuleGeneratedConf(jarNames, classpath);
 
         } catch (Exception e) {
             throw new MojoExecutionException("failed to generate " + OUTPUT_FILENAME, e);
         }
+    }
+
+    /**
+     * Make sure target/classes directory exists, creating it if needed.
+     */
+    private void ensureClassesDirExists() throws IOException {
+        File classesDir = getClassesDir();
+        if (!classesDir.exists()) {
+            if (!classesDir.mkdirs()) {
+                throw new IOException("failed to create directory " + classesDir.getAbsolutePath());
+            }
+        }
+    }
+
+    private File getClassesDir() {
+        return new File(outputDirectory, CLASSES_DIR_NAME);
+    }
+
+    private DependencyNode requestRootDependencyNode() throws DependencyCollectionException {
+        String coords = project.getGroupId() + ":" + project.getArtifactId() + ":" + project.getVersion();
+        Dependency dependency = new Dependency(new DefaultArtifact(coords), RUNTIME_SCOPE);
+
+        CollectRequest collectRequest = new CollectRequest();
+        collectRequest.setRoot(dependency);
+        CollectResult collectResult = repoSystem.collectDependencies(repoSession, collectRequest);
+
+        return collectResult.getRoot();
+    }
+
+    private void resolveDependencies(final DependencyNode rootNode) throws DependencyResolutionException {
+        DependencyRequest dependencyRequest = new DependencyRequest();
+
+
+
+        dependencyRequest.setFilter(new AndDependencyFilter(
+                new ScopeDependencyFilter("provided","test","system"),
+                new DependencyFilter() {
+                    // filter the root because the current artifact may not yet exist in the Maven repo
+                    public boolean accept(DependencyNode dependencyNode, List<DependencyNode> list) {
+                        return dependencyNode != rootNode;
+                    }
+                }
+        ));
+        dependencyRequest.setRoot(rootNode);
+        repoSystem.resolveDependencies(repoSession, dependencyRequest);
+    }
+
+    /**
+     * Get the current projects jar name and its dependencies
+     */
+    private List<String> getJarNames(PreorderNodeListGenerator nodeVisitor) {
+        List<String> values = new ArrayList<String>();
+        // add the current project since we aren't resolving it from the Maven repo
+
+        values.add(project.getBuild().getFinalName() + DOT + project.getPackaging());
+        for (org.eclipse.aether.artifact.Artifact a : nodeVisitor.getArtifacts(false)) {
+            values.add(a.getFile().getName());
+        }
+        return values;
+    }
+
+    /**
+     * Absolute path to the current projects target artifact e.g. "myproject/target/myproject-SNAPSHOT.jar"
+     */
+    private String projectArtifactTarget() {
+        return project.getBuild().getDirectory() + File.separator + project.getBuild().getFinalName() + DOT + project.getPackaging();
+    }
+
+    /**
+     * Write a atk-module-generated.conf file with the supplied jarNames and build-time classpath information
+     */
+    private void writeAtkModuleGeneratedConf(List<String> jarNames, String classpath) throws MojoExecutionException {
+        Config config = ConfigFactory.empty()
+                .withValue(JAR_NAMES_KEY, ConfigValueFactory.fromIterable(jarNames, ORIGIN_DESCRIPTION))
+                .withValue(BUILD_CLASSPATH_KEY, ConfigValueFactory.fromAnyRef(classpath, ORIGIN_DESCRIPTION));
+
+        File configFile = new File(getClassesDir(), OUTPUT_FILENAME);
+        String contents = config.root().render();
+        writeFile(configFile, contents);
     }
 
     /**

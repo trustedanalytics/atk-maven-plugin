@@ -79,7 +79,7 @@
                     </execution>
                 </executions>
                 <configuration>
-		                <skipLocalStaging>true</skipLocalStaging>
+                    <skipLocalStaging>true</skipLocalStaging>
                     <serverId>atk</serverId>
                     <nexusUrl>https://maven.trustedanalytics.org</nexusUrl>
                 </configuration>

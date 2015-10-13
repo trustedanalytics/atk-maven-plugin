@@ -27,7 +27,7 @@ Certificate was added to keystore
 When prompted accept the key.
 
 
-You can also bypass certificate verification
+You can also bypass certificate verification all together
 ```
 MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true"
 ```
@@ -36,6 +36,6 @@ MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall
 Regardless of the option you choose the following will need to be added to **MAVEN_OPTS**
 
 ```
-MAVEN_OPTS="-Dhttps.protocols=TLSv1.2"
+-Dhttps.protocols=TLSv1.2
 ```
 
