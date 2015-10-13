@@ -33,6 +33,8 @@ import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.graph.DependencyNode;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
+import org.eclipse.aether.util.filter.AndDependencyFilter;
+import org.eclipse.aether.util.filter.ScopeDependencyFilter;
 import org.eclipse.aether.util.graph.visitor.PreorderNodeListGenerator;
 
 import java.io.File;
@@ -161,12 +163,18 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
 
     private void resolveDependencies(final DependencyNode rootNode) throws DependencyResolutionException {
         DependencyRequest dependencyRequest = new DependencyRequest();
-        dependencyRequest.setFilter(new DependencyFilter() {
-            // filter the root because the current artifact may not yet exist in the Maven repo
-            public boolean accept(DependencyNode dependencyNode, List<DependencyNode> list) {
-                return dependencyNode != rootNode;
-            }
-        });
+
+
+
+        dependencyRequest.setFilter(new AndDependencyFilter(
+                new ScopeDependencyFilter("provided","test","system"),
+                new DependencyFilter() {
+                    // filter the root because the current artifact may not yet exist in the Maven repo
+                    public boolean accept(DependencyNode dependencyNode, List<DependencyNode> list) {
+                        return dependencyNode != rootNode;
+                    }
+                }
+        ));
         dependencyRequest.setRoot(rootNode);
         repoSystem.resolveDependencies(repoSession, dependencyRequest);
     }
@@ -177,6 +185,7 @@ public class GenerateModuleJarConfMojo extends AbstractMojo {
     private List<String> getJarNames(PreorderNodeListGenerator nodeVisitor) {
         List<String> values = new ArrayList<String>();
         // add the current project since we aren't resolving it from the Maven repo
+
         values.add(project.getBuild().getFinalName() + DOT + project.getPackaging());
         for (org.eclipse.aether.artifact.Artifact a : nodeVisitor.getArtifacts(false)) {
             values.add(a.getFile().getName());
