@@ -10,7 +10,7 @@
 
   <properties>
     <mavenVersion>3.3.3</mavenVersion>
-    <javaVersion>1.8</javaVersion>
+    <javaVersion>1.7</javaVersion>
   </properties>
 
   <prerequisites>
